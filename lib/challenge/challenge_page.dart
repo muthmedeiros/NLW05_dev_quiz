@@ -2,13 +2,16 @@ import 'package:dev_quiz/challenge/challenge_controller.dart';
 import 'package:dev_quiz/challenge/widgets/next_button/next_button_widget.dart';
 import 'package:dev_quiz/challenge/widgets/question_indicator/question_indicator_widget.dart';
 import 'package:dev_quiz/challenge/widgets/quiz/quiz_widget.dart';
+import 'package:dev_quiz/result/result_page.dart';
 import 'package:dev_quiz/shared/models/question_model.dart';
 import 'package:flutter/material.dart';
 
 class ChallengePage extends StatefulWidget {
   final List<QuestionModel> questions;
+  final String title;
 
-  ChallengePage({Key? key, required this.questions}) : super(key: key);
+  ChallengePage({Key? key, required this.questions, required this.title})
+      : super(key: key);
 
   @override
   _ChallengePageState createState() => _ChallengePageState();
@@ -34,6 +37,13 @@ class _ChallengePageState extends State<ChallengePage> {
       );
   }
 
+  void onSelected(bool value) {
+    if(value){
+      controller.qtdAnswersRight++;
+    }
+    nextPage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +61,8 @@ class _ChallengePageState extends State<ChallengePage> {
                   }),
               ValueListenableBuilder<int>(
                   valueListenable: controller.currentPageNotifier,
-                  builder: (context, value, _) => QuestionIndicatorWidget(
+                  builder: (context, value, _) =>
+                      QuestionIndicatorWidget(
                         currentPage: value,
                         length: widget.questions.length,
                       )),
@@ -64,11 +75,12 @@ class _ChallengePageState extends State<ChallengePage> {
         controller: pageController,
         children: widget.questions
             .map(
-              (e) => QuizWidget(
+              (e) =>
+              QuizWidget(
                 question: e,
-                onChange: nextPage,
+                onSelected: onSelected,
               ),
-            )
+        )
             .toList(),
       ),
       bottomNavigationBar: SafeArea(
@@ -77,26 +89,37 @@ class _ChallengePageState extends State<ChallengePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: ValueListenableBuilder<int>(
             valueListenable: controller.currentPageNotifier,
-            builder: (context, value, _) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  if (value < widget.questions.length)
-                    Expanded(
-                      child: NextButtonWidget.white(
-                        label: "pular",
-                        onTap: nextPage,
-                      ),
-                    ),
-                  if (value == widget.questions.length)
-                    Expanded(
-                      child: NextButtonWidget.green(
-                        label: "confirmar",
-                        onTap: () {
-                          if (Navigator.canPop(context)) Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                ]),
+            builder: (context, value, _) =>
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (value < widget.questions.length)
+                        Expanded(
+                          child: NextButtonWidget.white(
+                            label: "pular",
+                            onTap: nextPage,
+                          ),
+                        ),
+                      if (value == widget.questions.length)
+                        Expanded(
+                          child: NextButtonWidget.green(
+                            label: "confirmar",
+                            onTap: () {
+                              if (Navigator.canPop(context))
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          ResultPage(
+                                            title: widget.title,
+                                            length: widget.questions.length,
+                                            result: controller.qtdAnswersRight,
+                                          )),
+                                );
+                            },
+                          ),
+                        ),
+                    ]),
           ),
         ),
       ),
